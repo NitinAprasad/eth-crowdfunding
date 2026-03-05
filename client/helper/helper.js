@@ -1,103 +1,101 @@
-
-import moment from "moment";
+// Replace moment with dayjs — lightweight (2KB vs 67KB for moment)
+import dayjs from "dayjs";
 import web3 from "web3";
 import _ from 'lodash';
 
-export const weiToEther = (num) =>{
-    return web3.utils.fromWei(num, 'ether')
-}
+export const weiToEther = (num) => {
+  return web3.utils.fromWei(num.toString(), 'ether');
+};
 
 export const etherToWei = (num) => {
-  const weiBigNumber = web3.utils.toWei(num, 'ether');
-  const wei = weiBigNumber.toString();
-  return wei
-}
+  const weiBigNumber = web3.utils.toWei(num.toString(), 'ether');
+  return weiBigNumber.toString();
+};
 
-export const unixToDate = (unixDate) =>{
-  return moment(unixDate).format("DD/MM/YYYY");
-}
+// dayjs replacement for moment
+export const unixToDate = (unixDate) => {
+  // unixDate from Solidity is in seconds; dayjs expects milliseconds
+  return dayjs(Number(unixDate) * 1000).format("DD/MM/YYYY");
+};
 
-export const state = ["Fundraising","Expired","Successful"];
+export const state = ["Fundraising", "Expired", "Successful"];
 
-export const projectDataFormatter = (data,contractAddress) =>{
+export const projectDataFormatter = (data, contractAddress) => {
   const formattedData = {
-    address:contractAddress,
-    creator:data?.projectStarter,
-    contractBalance: data.balance?weiToEther(data.balance):0,
-    title:data.title,
-    description:data.desc,
-    minContribution:weiToEther(data.minContribution),
-    goalAmount:weiToEther(data.goalAmount),
-    currentAmount:weiToEther(data.currentAmount),
-    state:state[Number(data.currentState)],
-    deadline:unixToDate(Number(data.projectDeadline)),
-    progress:Math.round((Number(weiToEther(data.currentAmount))/Number(weiToEther(data.goalAmount)))*100)
-  }
+    address: contractAddress,
+    creator: data?.projectStarter,
+    contractBalance: data.balance ? weiToEther(data.balance) : 0,
+    title: data.title,
+    description: data.desc,
+    minContribution: weiToEther(data.minContribution),
+    goalAmount: weiToEther(data.goalAmount),
+    currentAmount: weiToEther(data.currentAmount),
+    state: state[Number(data.currentState)],
+    deadline: unixToDate(Number(data.projectDeadline)),
+    progress: Math.round(
+      (Number(weiToEther(data.currentAmount)) / Number(weiToEther(data.goalAmount))) * 100
+    ),
+  };
   return formattedData;
-}
+};
 
-
-const formatProjectContributions = (contributions) =>{
-  const formattedData = contributions.map(data=>{
-    return {
-      projectAddress:data.returnValues.projectAddress,
-      contributor:data.returnValues.contributor,
-      amount:Number(weiToEther(data.returnValues.contributedAmount))
-    }
-  })
-  return formattedData;
-}
+const formatProjectContributions = (contributions) => {
+  return contributions.map((data) => ({
+    projectAddress: data.returnValues.projectAddress,
+    contributor: data.returnValues.contributor,
+    amount: Number(weiToEther(data.returnValues.contributedAmount)),
+  }));
+};
 
 export const groupContributionByProject = (contributions) => {
-  const contributionList = formatProjectContributions(contributions);
-  //const contributionGroupByProject = _.map(_.groupBy(contributionList, 'projectAddress'), (o,projectAddress,address) => { return {projectAddress:projectAddress, contributor: address,amount: _.sumBy(o,'amount') }})
-  return contributionList;
-}
+  return formatProjectContributions(contributions);
+};
 
-const formatContribution = (contributions) =>{
-  const formattedData = contributions.map(data=>{
-    return {
-      contributor:data.returnValues.contributor,
-      amount:Number(weiToEther(data.returnValues.amount))
-    }
-  })
-  return formattedData;
-}
+const formatContribution = (contributions) => {
+  return contributions.map((data) => ({
+    contributor: data.returnValues.contributor,
+    amount: Number(weiToEther(data.returnValues.amount)),
+  }));
+};
 
 export const groupContributors = (contributions) => {
   const contributorList = formatContribution(contributions);
-  const contributorGroup = _.map(_.groupBy(contributorList, 'contributor'), (o,address) => { return { contributor: address,amount: _.sumBy(o,'amount') }})
-  return contributorGroup;
-}
+  return _.map(
+    _.groupBy(contributorList, 'contributor'),
+    (o, address) => ({ contributor: address, amount: _.sumBy(o, 'amount') })
+  );
+};
 
-export const withdrawRequestDataFormatter = (data) =>{
-  return{
-     requestId:data.requestId,
-     totalVote:data.noOfVotes,
-     amount:weiToEther(data.amount),
-     status:data.isCompleted?"Completed":"Pending",
-     desc:data.description,
-     reciptant:data.reciptent
-    }
-}
+export const withdrawRequestDataFormatter = (data) => ({
+  requestId: data.requestId,
+  totalVote: data.noOfVotes,
+  amount: weiToEther(data.amount),
+  status: data.isCompleted ? "Completed" : "Pending",
+  desc: data.description,
+  // Updated field name: recipient (was reciptent typo)
+  recipient: data.recipient ?? data.reciptent,
+});
 
 export const connectWithWallet = async (onSuccess) => {
-  //connect web3 with http provider
+  if (typeof window === 'undefined') return;
+
   if (window.ethereum) {
-   window.ethereum.request({method:"eth_requestAccounts"})
-   .then(res=>{
-    onSuccess()
-   }).catch(error=>{
-     alert(error.message)
-   })
+    window.ethereum
+      .request({ method: "eth_requestAccounts" })
+      .then(() => {
+        onSuccess();
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
   } else {
     window.alert(
-      "Non-Ethereum browser detected. You should consider trying MetaMask!"
+      "No Ethereum wallet detected. Please install MetaMask to continue."
     );
   }
 };
 
 export const chainOrAccountChangedHandler = () => {
-  // reload the page to avoid any errors with chain or account change.
+  // Reload the page to avoid stale state after chain or account change
   window.location.reload();
-}
+};

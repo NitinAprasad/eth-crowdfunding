@@ -1,63 +1,404 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body{
-    background: #F7F5F2;
+/* ── Root / Body ─────────────────────────────────────────────── */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  --glass-blur: blur(24px);
+  --accent: #a78bfa;
+  --accent2: #60a5fa;
+  --accent3: #f472b6;
+  --radius: 22px;
+  --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-button:disabled{
-    @apply opacity-50 cursor-not-allowed;
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #0f0c29 0%, #1a1060 35%, #24243e 65%, #0d1b3e 100%);
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  color: #e2e8f0;
 }
 
-
-.card{
-    @apply w-full bg-slate-50 p-3 drop-shadow-md rounded-md lg:p-6 ;
+/* Animated ambient gradient orbs */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+  animation: floatOrb 12s ease-in-out infinite alternate;
+}
+body::before {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, #7c3aed, #3b82f6);
+  top: -200px; left: -150px;
+}
+body::after {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, #ec4899, #8b5cf6);
+  bottom: -150px; right: -100px;
+  animation-delay: -6s;
 }
 
-.ribbon{
-    @apply absolute top-0 right-0 m-2 py-1 px-2 rounded-md text-sm text-center text-white font-semibold ;
+@keyframes floatOrb {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(40px, 30px) scale(1.12); }
 }
 
-.inner-card{
-    @apply bg-[#8d8daa18] p-3 mx-1 rounded-sm;
+/* ── Liquid Glass Card ───────────────────────────────────────── */
+.card {
+  position: relative;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow), inset 0 1px 0 rgba(255,255,255,0.2);
+  padding: 1.5rem;
+  transition: var(--transition);
+  z-index: 1;
+}
+.card:hover {
+  box-shadow: 0 16px 56px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.35);
 }
 
-.input{
-    @apply border border-emerald-300 py-2 px-3 focus:outline-none focus:ring focus:ring-emerald-300 w-full;
-  }
-
-.form-control-input{
-    @apply border py-2 px-3 focus:outline-none focus:ring w-full rounded my-1;
+/* ── Inner Card (stat blocks) ────────────────────────────────── */
+.inner-card {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: var(--transition);
+}
+.inner-card:hover {
+  background: rgba(255,255,255,0.11);
 }
 
-.button{
-    @apply border bg-emerald-500 text-white rounded-r-md px-2 hover:bg-emerald-600 active:bg-emerald-700 focus:outline-none focus:ring focus:ring-emerald-300;
+/* ── Ribbon / Badge ──────────────────────────────────────────── */
+.ribbon {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  padding: 0.2rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
 }
-  
-.progress{
-    @apply bg-[#F56D91] w-full text-xs font-medium text-white text-center p-0.5 leading-none rounded-l-full;
+
+/* ── Input Fields ────────────────────────────────────────────── */
+.input, .form-control-input {
+  width: 100%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: var(--transition);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  margin: 0.2rem 0;
+}
+.input::placeholder, .form-control-input::placeholder {
+  color: rgba(200, 210, 240, 0.45);
+}
+.input:focus, .form-control-input:focus {
+  border-color: rgba(167, 139, 250, 0.7);
+  background: rgba(255,255,255,0.13);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
 }
 
-.date-picker input {
-    box-sizing: border-box;
-    position: relative;
-  }
+/* Date / Number inputs — keep text readable */
+.form-control-input::-webkit-inner-spin-button,
+.form-control-input::-webkit-outer-spin-button { opacity: 0.6; }
+.form-control-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.6);
+  cursor: pointer;
+}
 
-input[type="date"]::-webkit-calendar-picker-indicator {
-    background: transparent;
-    bottom: 0;
-    color: transparent;
-    cursor: pointer;
-    height: auto;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: auto;
-  }
+/* ── Buttons ─────────────────────────────────────────────────── */
+.button {
+  background: linear-gradient(135deg, #7c3aed, #3b82f6);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.4rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 16px rgba(124,58,237,0.4);
+  letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+}
+.button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18), transparent);
+  border-radius: inherit;
+}
+.button:hover {
+  box-shadow: 0 6px 24px rgba(124,58,237,0.6);
+  transform: translateY(-1px);
+}
+.button:active { transform: translateY(0); }
+.button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
-  .withdraw-button{
-    @apply border bg-emerald-500 text-white rounded-md p-2 mt-1  font-bold hover:bg-emerald-600 active:bg-emerald-700 focus:outline-none focus:ring focus:ring-emerald-300;
-    width: 100%;
-  }
+.withdraw-button {
+  width: 100%;
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 16px rgba(5,150,105,0.35);
+  margin-top: 0.5rem;
+}
+.withdraw-button:hover {
+  box-shadow: 0 6px 24px rgba(5,150,105,0.55);
+  transform: translateY(-1px);
+}
+.withdraw-button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Progress Bar ────────────────────────────────────────────── */
+.progress-track {
+  width: 100%;
+  background: rgba(255,255,255,0.1);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #f472b6, #a78bfa, #60a5fa);
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 6px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  box-shadow: 0 0 12px rgba(167,139,250,0.6);
+}
+
+/* ── Labels ──────────────────────────────────────────────────── */
+.glass-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(180, 195, 240, 0.7);
+  margin-bottom: 0.2rem;
+  display: block;
+}
+
+/* ── Connect Wallet Page ─────────────────────────────────────── */
+.connect-btn {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #3b82f6 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 999px;
+  padding: 1rem 3rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 8px 32px rgba(124,58,237,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+  letter-spacing: 0.04em;
+  position: relative;
+  overflow: hidden;
+}
+.connect-btn:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 16px 48px rgba(124,58,237,0.7), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.connect-btn:active { transform: translateY(0) scale(1); }
+
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ── Page fade-in animation ──────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.55s cubic-bezier(0.4,0,0.2,1) both; }
+.fade-up-delay-1 { animation-delay: 0.1s; }
+.fade-up-delay-2 { animation-delay: 0.2s; }
+.fade-up-delay-3 { animation-delay: 0.3s; }
+
+/* ── iOS Drum-Roll Date Picker ───────────────────────────────── */
+.drum-picker-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  position: relative;
+}
+
+.drum-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.drum-col-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(180,195,240,0.55);
+  margin-bottom: 4px;
+}
+
+.drum-scroll {
+  height: 168px;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  position: relative;
+  width: 100%;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  cursor: grab;
+}
+.drum-scroll:active { cursor: grabbing; }
+.drum-scroll::-webkit-scrollbar { display: none; }
+
+/* Gradient overlay to create the iOS fade effect at top/bottom */
+.drum-scroll-wrapper {
+  position: relative;
+  flex: 1;
+}
+.drum-scroll-wrapper::before,
+.drum-scroll-wrapper::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 56px;
+  pointer-events: none;
+  z-index: 2;
+}
+.drum-scroll-wrapper::before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(15,12,41,0.88), transparent);
+  border-radius: 14px 14px 0 0;
+}
+.drum-scroll-wrapper::after {
+  bottom: 0;
+  background: linear-gradient(to top, rgba(15,12,41,0.88), transparent);
+  border-radius: 0 0 14px 14px;
+}
+
+/* The center selection highlight line */
+.drum-center-line {
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  transform: translateY(-50%);
+  height: 48px;
+  background: rgba(167,139,250,0.15);
+  border-top: 1px solid rgba(167,139,250,0.4);
+  border-bottom: 1px solid rgba(167,139,250,0.4);
+  pointer-events: none;
+  z-index: 3;
+  border-radius: 8px;
+}
+
+.drum-item {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  scroll-snap-align: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(200, 215, 255, 0.45);
+  transition: color 0.2s, font-weight 0.2s;
+  user-select: none;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+.drum-item.selected {
+  color: #e2e8f0;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Spacer items top/bottom so first/last items can center */
+.drum-spacer {
+  height: 60px;
+  flex-shrink: 0;
+  scroll-snap-align: none;
+}
+
+/* Selected date display */
+.date-display {
+  background: rgba(167,139,250,0.12);
+  border: 1px solid rgba(167,139,250,0.3);
+  border-radius: 10px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #c4b5fd;
+  text-align: center;
+  margin-top: 0.5rem;
+  letter-spacing: 0.04em;
+}
+
+/* ── Scrollbar for main content ─────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(167,139,250,0.35);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(167,139,250,0.6); }
+
+/* ── Toast override ──────────────────────────────────────────── */
+.Toastify__toast {
+  background: rgba(30,30,60,0.88) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  border-radius: 14px !important;
+  color: #e2e8f0 !important;
+}

@@ -1,80 +1,105 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-const etherToWei = (n) =>{
-  return ethers.utils.parseUnits(n,'ether')
-}
+// ethers v6: parseUnits is now a top-level function (no more ethers.utils)
+const etherToWei = (n) => {
+  return ethers.parseUnits(n, 'ether');
+};
 
 const dateToUNIX = (date) => {
-  return Math.round(new Date(date).getTime() / 1000)
-}
+  return Math.round(new Date(date).getTime() / 1000);
+};
 
 describe("Crowdfunding", () => {
 
-  var address1; 
-  var address2; 
-  var crowdfundingContract;
+  let address1;
+  let address2;
+  let crowdfundingContract;
 
   beforeEach(async function () {
-    [address1, address2,  ...address] = await ethers.getSigners();
+    [address1, address2, ...address] = await ethers.getSigners();
 
     const Crowdfunding = await ethers.getContractFactory("Crowdfunding");
     crowdfundingContract = await Crowdfunding.deploy();
-
-  })
+    // ethers v6: waitForDeployment() replaces deployed()
+    await crowdfundingContract.waitForDeployment();
+  });
 
   describe("Request for funding", async function () {
     it("Start a project", async function () {
 
-      const minimumContribution=etherToWei('1');
-      const deadline=dateToUNIX('2022-04-25');
-      const targetContribution=etherToWei('100');
-      const projectTitle='Testing title';
-      const projectDesc='Testing description';
+      const minimumContribution = etherToWei('1');
+      // Use a future date so the contract doesn't reject it
+      const deadline = dateToUNIX('2028-01-01');
+      const targetContribution = etherToWei('100');
+      const projectTitle = 'Testing title';
+      const projectDesc = 'Testing description';
 
-      const project = await crowdfundingContract.connect(address1).createProject(minimumContribution,deadline,targetContribution,projectTitle,projectDesc)
-      const event = await project.wait();
+      const project = await crowdfundingContract.connect(address1).createProject(
+        minimumContribution,
+        deadline,
+        targetContribution,
+        projectTitle,
+        projectDesc
+      );
+      // ethers v6: use .wait() to get the receipt, then use filters for events
+      const receipt = await project.wait();
 
       const projectList = await crowdfundingContract.returnAllProjects();
 
-      // Test Event
-      expect(event.events.length).to.equal(1);
-      expect(event.events[0].event).to.equal("ProjectStarted");
-      expect(event.events[0].args.projectContractAddress).to.equal(projectList[0]);
-      expect(event.events[0].args.creator).to.equal(address1.address);
-      expect(event.events[0].args.minContribution).to.equal(minimumContribution);
-      expect(Number(event.events[0].args.projectDeadline)).to.greaterThan(0);
-      expect(event.events[0].args.goalAmount).to.equal(targetContribution);
-      expect(event.events[0].args.currentAmount).to.equal(0);
-      expect(event.events[0].args.noOfContributors).to.equal(0);
-      expect(event.events[0].args.title).to.equal(projectTitle);
-      expect(event.events[0].args.desc).to.equal(projectDesc);
-      expect(event.events[0].args.currentState).to.equal(0);
+      // Verify project was created
+      expect(projectList.length).to.equal(1);
 
+      // Check the emitted ProjectStarted event
+      const filter = crowdfundingContract.filters.ProjectStarted();
+      const events = await crowdfundingContract.queryFilter(filter, receipt.blockNumber, receipt.blockNumber);
+      expect(events.length).to.equal(1);
+      const evt = events[0].args;
+
+      expect(evt.projectContractAddress).to.equal(projectList[0]);
+      expect(evt.creator).to.equal(address1.address);
+      expect(evt.minContribution).to.equal(minimumContribution);
+      expect(Number(evt.projectDeadline)).to.be.greaterThan(0);
+      expect(evt.goalAmount).to.equal(targetContribution);
+      expect(evt.currentAmount).to.equal(0n);
+      expect(evt.noOfContributors).to.equal(0n);
+      expect(evt.title).to.equal(projectTitle);
+      expect(evt.desc).to.equal(projectDesc);
+      expect(evt.currentState).to.equal(0n);
     });
 
-    it("Get data", async function () {
+    it("Get data / contribute", async function () {
 
-      const minimumContribution=etherToWei('1');
-      const deadline=dateToUNIX('2022-04-25');
-      const targetContribution=etherToWei('100');
-      const projectTitle='Testing title';
-      const projectDesc='Testing description';
+      const minimumContribution = etherToWei('1');
+      const deadline = dateToUNIX('2028-01-01');
+      const targetContribution = etherToWei('100');
+      const projectTitle = 'Testing title';
+      const projectDesc = 'Testing description';
 
-      await crowdfundingContract.connect(address1).createProject(minimumContribution,deadline,targetContribution,projectTitle,projectDesc)
+      await crowdfundingContract.connect(address1).createProject(
+        minimumContribution,
+        deadline,
+        targetContribution,
+        projectTitle,
+        projectDesc
+      );
       const projectList = await crowdfundingContract.returnAllProjects();
-      const contribute = await crowdfundingContract.connect(address1).contribute(projectList[0],{value: etherToWei("4")});
-      
-      const event = await contribute.wait();
-      // Test ContributionReceived event
-      expect(event.events.length).to.equal(2);
-      expect(event.events[1].event).to.equal("ContributionReceived");
-      expect(event.events[1].args.projectAddress).to.equal(projectList[0]);
-      expect(event.events[1].args.contributedAmount).to.equal(etherToWei("4"));
-      expect(event.events[1].args.contributor).to.equal(address1.address);
+      const contribute = await crowdfundingContract.connect(address1).contribute(
+        projectList[0],
+        { value: etherToWei("4") }
+      );
 
-    })
+      const receipt = await contribute.wait();
 
-  })
+      // Check the emitted ContributionReceived event
+      const filter = crowdfundingContract.filters.ContributionReceived();
+      const events = await crowdfundingContract.queryFilter(filter, receipt.blockNumber, receipt.blockNumber);
+      expect(events.length).to.equal(1);
+      const evt = events[0].args;
 
+      expect(evt.projectAddress).to.equal(projectList[0]);
+      expect(evt.contributedAmount).to.equal(etherToWei("4"));
+      expect(evt.contributor).to.equal(address1.address);
+    });
+  });
 });

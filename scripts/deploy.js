@@ -1,18 +1,20 @@
 const hre = require("hardhat");
 
 async function main() {
+  console.log("Deploying Crowdfunding contract...");
 
-  // We get the contract to deploy
   const Crowdfunding = await hre.ethers.getContractFactory("Crowdfunding");
   const crowdfunding = await Crowdfunding.deploy();
 
-  await crowdfunding.deployed();
+  // ethers v6: waitForDeployment() replaces deployed()
+  await crowdfunding.waitForDeployment();
 
-  console.log("Crowdfunding deployed to:", crowdfunding.address);
+  // ethers v6: .target replaces .address
+  const deployedAddress = await crowdfunding.target;
+  console.log("Crowdfunding deployed to:", deployedAddress);
+  console.log("Update client/redux/interactions.js crowdFundingContractAddress with:", deployedAddress);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main()
   .then(() => process.exit(0))
   .catch((error) => {
