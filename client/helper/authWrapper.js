@@ -1,38 +1,39 @@
-import Router, { useRouter } from "next/router";
+import Router from "next/router";
 import Navbar from "../components/Navbar";
 
-export const getLocalStorageData = (name) =>{
-  var value;
+export const getLocalStorageData = (name) => {
   if (typeof window !== "undefined") {
-  value = localStorage.getItem(name)
+    return localStorage.getItem(name);
   }
-  return value
-}
+  return null;
+};
 
+/**
+ * Higher-order component that wraps a page with the Navbar
+ * and guards the route — unauthenticated users are redirected to "/".
+ */
 const authWrapper = (WrappedComponent) => {
   // eslint-disable-next-line react/display-name
   return (props) => {
+    if (typeof window !== "undefined") {
+      const walletAddress = getLocalStorageData("ADDRESS");
 
-    //  if (typeof window !== "undefined") {
-    //    const router = useRouter();
-      
-    //     const walletAddress = localStorage.getItem("ADDRESS");
-    //     console.log(walletAddress)
+      if (!walletAddress) {
+        // Redirect to home / connect-wallet page if not authenticated
+        Router.replace("/");
+        return null;
+      }
 
-    //   if (walletAddress) {
-        return (
-          <>
-            <Navbar />
-            <WrappedComponent {...props} />
-          </>
-        )
-    //   } else {
-    //     router.replace("/");
-    //     return  null;
-    //   }
-    // }
+      return (
+        <>
+          <Navbar />
+          <WrappedComponent {...props} />
+        </>
+      );
+    }
 
-    // return <div>Window not found</div>
+    // During SSR, render nothing — the client will handle the redirect
+    return null;
   };
 };
 
